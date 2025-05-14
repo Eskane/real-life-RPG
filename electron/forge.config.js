@@ -41,4 +41,5 @@ module.exports = {
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
   ],
+  buildIdentifier: 'real-life-rpg',
 };

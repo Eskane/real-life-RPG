@@ -1,30 +1,33 @@
 const { app, BrowserWindow, ipcMain } = require('electron/main')
 const path = require('node:path')
+const pathToHtml = path.join(__dirname, '../app/index.html')
+const pathToPreload = path.join(__dirname, 'preload.js');
 const { saveJSON } = require('./fs/storage');
 
 
 const createWindow = () => {
   const win = new BrowserWindow({
+    title: 'Real Life RPG',
     width: 800,
     height: 600,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: pathToPreload,
+      contextIsolation: true,
       sandbox: false
     }
   })
-  win.loadFile('index.html')
+  win.loadFile(pathToHtml)
 }
 
 app.whenReady().then(() => {
-  ipcMain.handle('ping', () => 'pong')
-  createWindow()
+  createWindow()  
+})
 
-  app.on('activate', () => {
+app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
     }
   })
-})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -32,6 +35,12 @@ app.on('window-all-closed', () => {
   }
 })
 
-ipcMain.handle('save-json', (event, __filename, data) => {
-  saveJSON(__filename, data);
+ipcMain.handle('save-json', async (_event, __filename, data) => {
+  try{
+    await saveJSON(__filename, data);
+    return { success:true };
+  } catch (error){
+    console.error('Fehler beim Speichern', error);
+    return { success: false, error: error.message };
+  }
 });
